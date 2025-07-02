@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane prefHeight="269.0" prefWidth="349.0" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="UI.inicioControl">
+   <children>
+       <!-- fx:id le da el nombre del objeto -->
+       <Button fx:id="Iniciar" layoutX="138.0" layoutY="158.0" mnemonicParsing="false" onAction="#mostrar" prefHeight="35.0" prefWidth="74.0" text="Inicio" />
+      <Label fx:id="texto" layoutX="126.0" layoutY="48.0" prefHeight="51.0" prefWidth="98.0" />
+   </children>
+</AnchorPane>
