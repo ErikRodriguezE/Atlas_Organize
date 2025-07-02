@@ -15,7 +15,7 @@ public class Atlas extends Application {
         // Crear la escena con el contenido del FXML
         Scene scene = new Scene(fxmlLoader.load(),  349, 250 ); // ancho, alto
         // Configurar la ventana
-        primaryStage.setTitle("Mi Aplicación JavaFX");
+        primaryStage.setTitle("Atlas Organize");
         primaryStage.setScene(scene);
         // Mostrar la ventana
         primaryStage.show();
@@ -24,7 +24,5 @@ public class Atlas extends Application {
     public static void main(String[] args) {
         launch(args);
     }
-
-
 
 }

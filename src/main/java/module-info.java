@@ -7,6 +7,7 @@ module com.example.atlas_organize {
     requires net.synedra.validatorfx;
     requires org.kordamp.ikonli.javafx;
     requires org.kordamp.bootstrapfx.core;
+    requires java.desktop;
 
     opens Program to javafx.fxml;
     exports Program;
