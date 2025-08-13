@@ -28,7 +28,7 @@ public class inicioControl {
 
         File carpetaSeleccionada  = directorioOrganizar.showDialog(Iniciar.getScene().getWindow()); //guardo el directorio
 
-        if (carpetaSeleccionada != null){
+        if (carpetaSeleccionada != null && comprobarVacio(carpetaSeleccionada)){
             ruta = carpetaSeleccionada.toPath();
             try{
                 FXMLLoader cargar  = new FXMLLoader(getClass().getResource("/principal.fxml"));//crea un objeto fxmlLoader de principal dxml
@@ -48,6 +48,17 @@ public class inicioControl {
         }
 
 
+    }
+    //comprueba que no este vacia
+    public boolean comprobarVacio(File comprobarCarpeta){
+        String[] archivos = comprobarCarpeta.list(); // Devuelve un array con nombres
+        if (archivos != null && archivos.length == 0) {
+            JOptionPane.showMessageDialog(null,  "Ups! La carpeta debe contener almenos un archivo");
+            return  false;
+        }
+        else {
+            return  true;
+        }
     }
 
 }
