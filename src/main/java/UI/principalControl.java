@@ -41,41 +41,49 @@ public class principalControl {
 
             //si no sale null va hacer la accion de mover los archivos escogidos, una vez terminado borra los datos del array para actualizarlo despues
             if (opcionOrganizar!=null){
-                moverArchivos(opcionOrganizar);
-            }
+                //pregunta si quiere buscar la carpeta, crearla o cancelar las opciones
+                int opcion = JOptionPane.showConfirmDialog(null,"Quieres buscar la carpeta donde llevar los archivos escogidos \n Si --- abrir explorador de archivos \n No --- Se crea una carpeta nueva donde meterlo",
+                        "Confirme", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
 
-            extencionesArray();//si no hay mas archivos el array sera vacio y cambiara de escena, si aun hay solo actualiza
+                if (opcion == JOptionPane.YES_OPTION){
+                    procesoDeMover(opcionOrganizar,1);
+                } else if (opcion == JOptionPane.NO_OPTION) {
+                    procesoDeMover(opcionOrganizar,0);
+                }
+            }
+            //si no hay mas archivos el array sera vacio y cambiara de escena, si aun hay solo actualiza la lista
+            extencionesArray();
 
 
         } catch (Exception e) {
             System.out.println(e);
+            JOptionPane.showMessageDialog(null,  "Ups! error");
         }
-
-        System.out.println(ruta);
-
-
-
     }
+
     //metodo que llena el array y verifica que la carpeta se quedo vacia
     public void extencionesArray(){
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(ruta)) {
+            //recorre la carpeta actual
             for (Path archivo : stream) {
+                //si encuentra un archivo que no sea un directorio lo va validar para agregarlo
                 if (Files.isRegularFile(archivo)) {
+                    //adquiere el nombre de el archivo
                     String nombre = archivo.getFileName().toString();
                     int punto = nombre.lastIndexOf(".");
+                    //adquiere la extencion (lo que va despues del punto)
                     if (punto != -1 && punto < nombre.length() - 1) {
                         String ext = nombre.substring(punto + 1).toLowerCase();
-
-                        if (!listaExtenciones.contains(ext)){ //busca si la extencion ya existe en el array
+                        //busca si la extencion ya existe en el array, si no existe lo agrega
+                        if (!listaExtenciones.contains(ext)){
                             listaExtenciones.add(ext);
                         }
                     }
-                } else if (Files.isDirectory(archivo)) {
-                    System.out.println("subcarpetas: " + archivo.getFileName());
                 }
             }
+            //si ve que no exita mas archivos en el directorio te manda a inicio
             if (listaExtenciones.isEmpty()) {
-                JOptionPane.showMessageDialog(null, "La quedo vacia \n Volviendo a inicio.......");
+                JOptionPane.showMessageDialog(null, "La carpeta quedo vacia \n\nVolviendo a inicio..........");
                 terminoElProceso();
             }
         } catch (IOException e) {
@@ -83,55 +91,57 @@ public class principalControl {
         }
     }
 
-    //metodo que mueve los archivos escogidos -------------- completar y corregir error de repeticion logica
-    public void moverArchivos (String extencion){
-        //pregunta si quiere buscar la carpeta, crearla o cancelar las opciones
-        int opcion = JOptionPane.showConfirmDialog(null,"Quieres buscar la carpeta donde llevar los archivos escogidos \n Si --- abrir explorador de archivos \n No --- Se crea una carpeta nueva donde meterlo",
-                "Confirme", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
-        //si busca la carpeta hace el proceso de  movelos de forma normal, si existe uno repetido les agreaga un numero para evistar fallos
-        if (opcion == JOptionPane.YES_OPTION){
+    //metodo que mueve los archivos escogidos
+    public void procesoDeMover(String extencion, int opcion ){
+        //opcion "si" para buscar la carpeta
+        if (opcion == 1){
             DirectoryChooser directorioOrganizar = new DirectoryChooser() ; //abre el directorio para escoger
             directorioOrganizar.setTitle("escoja una carpeta para organizar"); //el mensaje de la ventana emergente
 
             File carpetaSeleccionada  = directorioOrganizar.showDialog((Stage) organizar.getScene().getWindow()); //aca se escoge la carpeta
 
             if (carpetaSeleccionada != null){
-                Path rutaMover = carpetaSeleccionada.toPath(); //convertimos de tipo file a path
-                try (DirectoryStream<Path> stream = Files.newDirectoryStream(ruta)){ //recorre la carpeta "ruta" (la carpeta que escojimos al principio)
-                    for (Path archivo : stream){//recorremos la lista
-                        if (Files.isRegularFile(archivo) && archivo.toString().endsWith("."+extencion)){
-                            Path destino = rutaMover.resolve(archivo.getFileName());
-                            int contador = 1;
-                            //por si exite otro archivo con el mismo nombre
-                            while (Files.exists(destino)){
-                                String nombre = archivo.getFileName().toString();
-                                int punto = nombre.lastIndexOf(".");
-                                // "?" y ":" significa un if y else
-                                // ej: resultado = (condición) ? valorSiVerdadero : valorSiFalso;
-                                String base = (punto == -1) ? nombre : nombre.substring(0,punto); //si no tiene un punto coje el string completo y ya, si tiene punto coje todo el String  que va antes del punto
-                                String extension = (punto == -1) ? "" : nombre.substring(punto);// lo mismo pero solo coje lo que va despues del punto
-
-                                destino = rutaMover.resolve(base + "(" + contador + ")" + extension);
-                                contador++;
-                            }
-
-                            Files.move(archivo,destino);
-                            listaExtenciones.clear();
-                            System.out.println("movido: "+archivo.getFileName());
-                        }
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                //convertimos de tipo file a path para poder enviarlo
+                Path rutaMover = carpetaSeleccionada.toPath();
+                //metodo de mover archivos (ruta donde se movera que extrajimos del directoriChooser, la extencion de los archivos que movera)
+                moverArchivos(rutaMover, extencion);
             }
             else{
                 JOptionPane.showMessageDialog(null,  "Ups! error al escoger tu carpeta");
             }
         }
-        else if (opcion == JOptionPane.NO_OPTION) {
-            System.out.println("no");
-        }else {
-            JOptionPane.showMessageDialog(null,  "Ups! error al escoger tu carpeta");
+
+        //crea una carpeta dentro del directorio en que esta y mueve los archivos
+        else if (opcion == 0) {
+            //se pide el nombre de la nueva carpeta
+            String nombre = JOptionPane.showInputDialog("Digita el nombre la carpeta" );
+            //para evitar errores con variables null
+            if (nombre == null){
+                return;
+            }
+            //verifica si existe
+            if (existeCarpeta(nombre)){
+                //ya que la carpeta consigue la nueva ruta solo agregandole la nueva carpeta que ya existia
+                Path rutaMover = ruta.resolve(nombre);
+                //metodo de mover archivos (ruta donde se movera, la extencion de los archivos que movera)
+                moverArchivos(rutaMover, extencion);
+
+            }
+            //si no existe la carpeta
+            else{
+                try {
+                    //crea el directorio
+                    Files.createDirectory(ruta.resolve(nombre));
+                    //consigue la nueva ruta
+                    Path rutaMover = ruta.resolve(nombre);
+                    //metodo de mover carpeta (ruta donde se movera, la extencion de  los archivos que movera)
+                    moverArchivos(rutaMover, extencion);
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    JOptionPane.showMessageDialog(null,  "Ups! error");
+                }
+            }
         }
     }
 
@@ -139,7 +149,7 @@ public class principalControl {
         this.ruta = ruta;
     }
 
-    //cambia la escena
+    //cambia la escena a el inicio
     public void terminoElProceso(){
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/inicio.fxml"));
@@ -156,4 +166,49 @@ public class principalControl {
             e.printStackTrace();
         }
     }
+
+    public void moverArchivos (Path rutaMover, String extencion){
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(ruta)){ //recorre la carpeta "ruta" (la carpeta que escojimos al principio)
+            for (Path archivo : stream){//recorremos la lista
+                if (Files.isRegularFile(archivo) && archivo.toString().endsWith("."+extencion)){
+                    Path destino = rutaMover.resolve(archivo.getFileName());
+                    int contador = 1;
+                    //por si exite otro archivo con el mismo nombre
+                    while (Files.exists(destino)){
+                        String nombre = archivo.getFileName().toString();
+                        int punto = nombre.lastIndexOf(".");
+                        // "?" y ":" significa un if y else
+                        // ej: resultado = (condición) ? valorSiVerdadero : valorSiFalso;
+                        String base = (punto == -1) ? nombre : nombre.substring(0,punto); //si no tiene un punto coje el string completo y ya, si tiene punto coje todo el String  que va antes del punto
+                        String extension = (punto == -1) ? "" : nombre.substring(punto);// lo mismo pero solo coje lo que va despues del punto
+
+                        destino = rutaMover.resolve(base + "(" + contador + ")" + extension);
+                        contador++;
+                    }
+
+                    Files.move(archivo,destino);
+                    listaExtenciones.clear();
+                    System.out.println("movido: "+archivo.getFileName());
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    //verifica si existe una carpeta en el directorio actual llamada igual a al que quieren crear
+    public boolean existeCarpeta(String nombreCarpeta){
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(ruta)) {
+            //recorre el directorio
+            for (Path p : stream) {
+                if (Files.isDirectory(p) && p.getFileName().toString().equalsIgnoreCase(nombreCarpeta)) {
+                    return true; // Retorna true si encuentra una subcarpeta llamda igual
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return false; //si no encuentra nada retorna
+    }
+
 }
